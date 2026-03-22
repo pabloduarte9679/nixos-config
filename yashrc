@@ -1,0 +1,9 @@
+export HOSTNAME=bsd
+export VIMRC=/home/pablo/.vimrc
+alias cpb='xsel --clipboard'
+YASH_PS1=$_uc'${LOGNAME}'$_hc'@${HOSTNAME%%.*}\fd. '\
+'${${${PWD:/~/\~}##*/}:-$PWD} ${{?:/0/}:+\\fr.$?\\fd. }\$ '
+bindkey --emacs '\^L' clear-and-redraw-all
+bindkey --vi-insert '\^L' clear-and-redraw-all
+bindkey --vi-command '\^L' clear-and-redraw-all
+
