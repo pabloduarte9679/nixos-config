@@ -1,8 +1,8 @@
 export HOSTNAME=bsd
 export VIMRC=/home/pablo/.vimrc
 alias cpb='xsel --clipboard'
-alias hotspot-on='nmcli connection up my-hotspot'
-alias hotspot-off='nmcli connection down my-hotspot'
+alias hotspot-on='nmcli connection up pabloh'
+alias hotspot-off='nmcli connection down pabloh'
 alias hotspot-devices='cat /var/lib/NetworkManager/dnsmasq-wlp1s0.leases'
 alias edit-config='sudo vim /etc/nixos/configuration.nix'
 YASH_PS1=$_uc'${LOGNAME}'$_hc'@${HOSTNAME%%.*}\fd. '\
