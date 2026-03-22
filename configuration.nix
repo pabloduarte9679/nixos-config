@@ -32,6 +32,7 @@ in
   # Configure network connections interactively with nmcli or nmtui.
   networking.networkmanager.enable = true;
   hardware.bluetooth.enable  = true;
+  networking.firewall.trustedInterfaces = [ "wlp1s0" ];
   services.blueman.enable = true;
   # Set your time zone.
    time.timeZone = "America/Chihuahua";
@@ -133,6 +134,7 @@ services.xserver.displayManager.startx.enable = true;
      qemu
      quickemu
      python315
+     unixtools.arp
    ];
   environment.shells = with pkgs; [yash];
   environment.variables = {
