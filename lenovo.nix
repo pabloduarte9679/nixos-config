@@ -1,7 +1,4 @@
-# Edit this configuration file to define what should be installed on
-# your system. Help is available in the configuration.nix(5) man page, on
-# https://search.nixos.org/options and in the NixOS manual (`nixos-help`).
-
+# NixOS configuration for Lenovo Y50-70
 { config, lib, pkgs, ... }:
 
 let
@@ -10,26 +7,49 @@ let
 in
 {
   imports =
-    [ # Include the results of the hardware scan.
+    [
       ./hardware-configuration.nix
       (import "${home-manager}/nixos")
     ];
 
-  # Use the systemd-boot EFI boot loader.
+  # Bootloader
   boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;
 
-
+  # Y50-70 kernel params
   boot.kernelParams = [
     "mem_sleep_default=deep"
   ];
 
-  # Use latest kernel.
   boot.kernelPackages = pkgs.linuxPackages_latest;
 
+  # NVIDIA Optimus (Intel + GTX 860M)
+  hardware.nvidia = {
+    modesetting.enable = true;
+    powerManagement.enable = true;
+    powerManagement.finegrained = false;
+    open = false;
+    nvidiaSettings = true;
+    package = config.boot.kernelPackages.nvidiaPackages.stable;
+  };
+
+  hardware.nvidia.prime = {
+    offload = {
+      enable = true;
+      enableOffloadCmd = true;
+    };
+    intelBusId  = "PCI:0:2:0";
+    nvidiaBusId = "PCI:1:0:0";
+  };
+
+  services.xserver.videoDrivers = [ "nvidia" ];
+
+  # No swap
+  # swapDevices = [];
 
   services.logind.lidSwitch = "suspend";
   networking.networkmanager.wifi.powersave = false;
+  networking.networkmanager.dns = "dnsmasq";
 
   programs.adb.enable = true;
 
@@ -42,35 +62,13 @@ in
   networking.networkmanager.enable = true;
   hardware.bluetooth.enable = true;
 
-
-  networking.firewall.trustedInterfaces = [ "wlan0" ];
+  # wlp8s0 is the WiFi interface on this machine
+  networking.firewall.trustedInterfaces = [ "wlp8s0" ];
   services.blueman.enable = true;
 
   time.timeZone = "America/Chihuahua";
 
-  
-  hardware.nvidia = {
-    modesetting.enable = true;
-    powerManagement.enable = true;
-    powerManagement.finegrained = false;  
-    open = false;  
-    nvidiaSettings = true;
-    package = config.boot.kernelPackages.nvidiaPackages.legacy_470; 
-  };
-
-  hardware.nvidia.prime = {
-    offload = {
-      enable = true;
-      enableOffloadCmd = true; 
-    };
-   
-    intelBusId  = "PCI:0:2:0";
-    nvidiaBusId = "PCI:4:0:0";
-  };
-
-  services.xserver.videoDrivers = [ "nvidia" ];
-
-  # Enable the X11 windowing system.
+  # X11
   services.xserver.displayManager.lightdm.enable = false;
   services.xserver.displayManager.startx.enable = true;
 
@@ -83,11 +81,13 @@ in
       };
     };
   };
+
   services.xserver = {
     enable = true;
+    xkb.layout = "us";
   };
 
-  # Enable CUPS to print documents.
+  # Printing
   services.printing = {
     enable = true;
     drivers = with pkgs; [ hplipWithPlugin ];
@@ -99,10 +99,18 @@ in
     openFirewall = true;
   };
 
-  # Enable touchpad support.
+  # Touchpad
   services.libinput.enable = true;
 
+  # Dnsmasq for hotspot
+  services.dnsmasq.enable = true;
 
+  # IP forwarding for hotspot
+  boot.kernel.sysctl = {
+    "net.ipv4.ip_forward" = 1;
+  };
+
+  # User
   users.users.pablo = {
     isNormalUser = true;
     extraGroups = [ "wheel" "docker" "lp" "adbusers" "dialout" "fuse" ];
@@ -113,6 +121,7 @@ in
   };
 
   nixpkgs.config.allowUnfree = true;
+  nixpkgs.config.nvidia.acceptLicense = true;
   programs.firefox.enable = true;
 
   environment.systemPackages = with pkgs; [
@@ -130,8 +139,6 @@ in
     gcc
     yash
     pamixer
-    php
-    dbeaver-bin
     nodejs_24
     freetds
     unixODBC
@@ -139,22 +146,14 @@ in
     bluetui
     xsel
     unzip
-    localsend
     feh
-    wkhtmltopdf
     mupdf
-    netsurf-browser
-    qemu
     python315
     unixtools.arp
-    hplip
     usbutils
-    freecad
     scrot
     cowsay
     unrar
-    swtpm
-    OVMF
     mlocate
     sc
     file
@@ -163,22 +162,12 @@ in
     man-pages-posix
     zathura
     gdb
-    quickemu
-    mplayer
-    jdk
     xorg.libXxf86vm
     gtk3
     glib
-    prismlauncher
-    php84Packages.composer
-    libreoffice
-    python313Packages.pip
-    python313Packages.pymodbus
-    libmodbus
-    wine64
-    dotnet-sdk
-    usql
-    nvtopPackages.nvidia 
+    nvtopPackages.nvidia
+    numlockx
+    appimage-run
   ];
 
   services.locate.locate = pkgs.mlocate;
@@ -202,14 +191,7 @@ in
     enable = true;
   };
 
-  services.samba = {
-
-
   services.openssh.enable = true;
 
-  services.xserver = {
-  enable = true;
-  xkb.layout = "es";
-};
   system.stateVersion = "25.11";
 }
