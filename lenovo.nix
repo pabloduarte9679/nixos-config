@@ -49,7 +49,7 @@ in
 
   services.logind.lidSwitch = "suspend";
   networking.networkmanager.wifi.powersave = false;
-  networking.networkmanager.dns = "dnsmasq";
+  networking.networkmanager.dns = "default";
 
   programs.adb.enable = true;
 
@@ -103,12 +103,6 @@ in
   services.libinput.enable = true;
 
   # Dnsmasq for hotspot
-  services.dnsmasq.enable = true;
-
-  # IP forwarding for hotspot
-  boot.kernel.sysctl = {
-    "net.ipv4.ip_forward" = 1;
-  };
 
   # User
   users.users.pablo = {
@@ -168,6 +162,7 @@ in
     nvtopPackages.nvidia
     numlockx
     appimage-run
+    localsend
   ];
 
   services.locate.locate = pkgs.mlocate;
