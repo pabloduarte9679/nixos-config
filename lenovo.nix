@@ -77,7 +77,7 @@ in
     package = pkgs.dwm.overrideAttrs {
       src = builtins.fetchGit {
         url = "https://github.com/pabloduarte9679/dwm";
-        rev = "388409f2436f876fc32b4ed5f487cb74d0502b4e";
+        rev = "a49870045c77445757da71aa209c634e608383a1";
       };
     };
   };
@@ -85,6 +85,7 @@ in
   services.xserver = {
     enable = true;
     xkb.layout = "us";
+    xkb.options = "compose:ralt,terminate:ctrl_alt_bksp";
   };
 
   # Printing
@@ -162,7 +163,16 @@ in
     nvtopPackages.nvidia
     numlockx
     appimage-run
-    localsend
+    localsend 
+    quickemu
+    qemu
+    OVMF
+    samba
+    pcsx2
+    libinput
+    xbindkeys
+    xdotool
+    ollama
   ];
 
   services.locate.locate = pkgs.mlocate;
