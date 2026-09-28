@@ -1,0 +1,258 @@
+# Edit this configuration file to define what should be installed on
+# your system. Help is available in the configuration.nix(5) man page, on
+# https://search.nixos.org/options and in the NixOS manual (`nixos-help`).
+
+{ config, lib, pkgs, ... }:
+
+let
+  home-manager = builtins.fetchTarball
+    "https://github.com/nix-community/home-manager/archive/release-26.05.tar.gz";
+in
+{
+  imports =
+    [ # Include the results of the hardware scan.
+      ./hardware-configuration.nix
+      (import "${home-manager}/nixos")
+    ];
+
+  # Use the systemd-boot EFI boot loader.
+  boot.loader.systemd-boot.enable = true;
+  boot.loader.efi.canTouchEfiVariables = true;
+  boot.kernelParams = [
+    "mem_sleep_default=deep"   # force S3 deep sleep explicitly
+    "i915.enable_dc=0"         # disable display power saving (freeze fix)
+    "i915.enable_psr=0"        # disable panel self refresh (freeze fix)
+    "nvme_core.default_ps_max_latency_us=0"  # disable NVMe power states
+  ];
+
+  # Use latest kernel.
+  boot.kernelPackages = pkgs.linuxPackages_latest;
+
+  swapDevices = [
+    { device = "/dev/nvme0n1p2"; }
+  ];
+
+  services.logind.settings.Login.HandleLidSwitch = "suspend";
+  networking.networkmanager.wifi.powersave = false;
+
+
+  networking.hostName = "nixos";
+
+  home-manager.users.pablo = import ./home.nix;
+  home-manager.useGlobalPkgs = true;
+  home-manager.useUserPackages = true;
+
+  networking.networkmanager.enable = true;
+  hardware.bluetooth.enable = true;
+  networking.firewall.trustedInterfaces = [ "wlp1s0" ];
+  services.blueman.enable = true;
+
+  time.timeZone = "America/Chihuahua";
+
+  # Enable the X11 windowing system.
+  services.xserver.displayManager.lightdm.enable = false;
+  services.xserver.displayManager.startx.enable = true;
+
+  services.xserver.windowManager.dwm = {
+    enable = true;
+    package = pkgs.dwm.overrideAttrs {
+      src = builtins.fetchGit {
+        url = "https://github.com/pabloduarte9679/dwm";
+        rev = "388409f2436f876fc32b4ed5f487cb74d0502b4e";
+      };
+    };
+  };
+  services.xserver = {
+    enable = true;
+  };
+
+  # Enable CUPS to print documents.
+  services.printing = {
+    enable = true;
+    drivers = with pkgs; [ hplipWithPlugin ];
+  };
+
+  services.avahi = {
+    enable = true;
+    nssmdns4 = true;
+    openFirewall = true;
+  };
+
+  # Enable touchpad support.
+  services.libinput.enable = true;
+
+  # Define a user account. Don't forget to set a password with 'passwd'.
+  users.users.pablo = {
+    isNormalUser = true;
+    extraGroups = [ "wheel" "docker" "lp" "adbusers" "dialout" "fuse" ];
+    shell = pkgs.yash;
+    packages = with pkgs; [
+      tree
+    ];
+  };
+
+  nixpkgs.config.allowUnfree = true;
+  programs.firefox.enable = true;
+
+  environment.systemPackages = with pkgs; [
+    vim
+    wget
+    st
+    dmenu
+    tmux
+    fastfetch
+    htop
+    brightnessctl
+    acpi
+    git
+    gnumake
+    gcc
+    yash
+    pamixer
+    php
+    dbeaver-bin
+    nodejs_24
+    freetds
+    unixodbc
+    arandr
+    bluetui
+    xsel
+    unzip
+    localsend
+    feh
+    wkhtmltopdf
+    mupdf
+    netsurf-browser
+    qemu
+    python315
+    unixtools.arp
+    hplip
+    usbutils
+    freecad
+    scrot
+    cowsay
+    unrar
+    swtpm
+    OVMF
+    mlocate
+    sc
+    file
+    ghostscript
+    man-pages
+    man-pages-posix
+    zathura
+    gdb
+    quickemu
+    mplayer
+    jdk
+    libxxf86vm
+    gimp
+    obs-studio
+    gtk3
+    glib
+    prismlauncher
+    php84Packages.composer
+    libreoffice
+    python313Packages.pip
+    python313Packages.pymodbus
+    libmodbus
+    wineWow64Packages.stable
+    lutris
+    dotnet-sdk 
+    usql
+    sent
+    poppler-utils
+    vlc
+    kdePackages.kdenlive
+    cmus
+    scrcpy
+    inkscape
+    kdePackages.kate
+    typst
+    neovim
+    fzf
+    tinymist
+    texliveFull
+    sqlitebrowser
+    lm_sensors
+    upower
+    jmtpfs
+    steam-run
+    pandoc
+    calibre
+    foliate
+    android-tools
+    winetricks
+    thunar
+    protontricks
+    ghex
+    kdePackages.ark
+    gnome-calendar
+    smartmontools 
+    geeqie
+    p7zip
+    blender
+    cmake
+    gcc-arm-embedded
+    nasm
+  ];
+
+
+  programs.steam = { enable = true; };
+  fonts.packages = with pkgs; [
+  eb-garamond
+  source-code-pro
+];
+
+
+hardware.graphics.enable32Bit = true;
+  services.locate.package = pkgs.mlocate;
+  services.locate.enable = true;
+
+  documentation.dev.enable = true;
+  documentation.man = {
+    man-db.enable = false;
+    mandoc.enable = true;
+  };
+
+  environment.shells = with pkgs; [ yash ];
+  environment.variables = {
+    SSH_ASKPASS = "";
+    SSH_ASKPASS_REQUIRE = "never";
+  };
+  programs.ssh.askPassword = "";
+  programs.ssh.startAgent = false;
+
+  virtualisation.docker = {
+    enable = true;
+  };
+
+
+  services.samba = {
+    enable = true;
+    openFirewall = true;
+    settings = {
+      global = {
+        workgroup = "WORKGROUP";
+        "server string" = "nixos";
+        "netbios name" = "nixos";
+        security = "user";
+        "server min protocol" = "NT1";
+        "server max protocol" = "SMB3";
+      };
+      compartido = {
+        path = "/home/pablo/compartido";
+        browseable = "yes";
+        "read only" = "no";
+        "guest ok" = "no";
+        "force user" = "pablo";
+      };
+    };
+  };
+
+  services.samba-wsdd.enable = true;
+
+  services.openssh.enable = true;
+
+  system.stateVersion = "25.11";
+}
